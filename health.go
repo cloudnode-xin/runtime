@@ -25,17 +25,17 @@ func (r *router) ServeHTTP(rep http.ResponseWriter, req *http.Request) {
 
 }
 
-type healthChecker struct {
+type healthCheckService struct {
 	check  bool
 	server *http.Server
 	root   *Service
 }
 
-func (h *healthChecker) Name() string {
+func (h *healthCheckService) Name() string {
 	return "#healthcheck"
 }
 
-func (h *healthChecker) IsHealthy() bool {
+func (h *healthCheckService) IsHealthy() bool {
 	if h.root == nil {
 		return true
 	}
@@ -43,7 +43,7 @@ func (h *healthChecker) IsHealthy() bool {
 	return h.root.IsHealthy()
 }
 
-func (h *healthChecker) Load(f Finder) error {
+func (h *healthCheckService) Load(f Finder) error {
 	check := flag.Bool("healthcheck", false, "do health check")
 	flag.Parse()
 
@@ -51,7 +51,7 @@ func (h *healthChecker) Load(f Finder) error {
 	return nil
 }
 
-func (h *healthChecker) Start(f Finder, ctx context.Context) error {
+func (h *healthCheckService) Start(f Finder, ctx context.Context) error {
 	log := f.MustGet("#logger").(*Logger).New("healthcheck")
 
 	if !h.check {
@@ -88,7 +88,7 @@ func (h *healthChecker) Start(f Finder, ctx context.Context) error {
 	return nil
 }
 
-func (h *healthChecker) Stop(f Finder) error {
+func (h *healthCheckService) Stop(f Finder) error {
 	if !h.check && h.server != nil {
 		return h.server.Shutdown(context.Background())
 	}
@@ -97,5 +97,5 @@ func (h *healthChecker) Stop(f Finder) error {
 }
 
 func GlobalHealthChecker() Servicer {
-	return &healthChecker{}
+	return &healthCheckService{}
 }

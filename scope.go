@@ -71,7 +71,7 @@ func (s *Scope) IsHealthy() bool {
 
 func (s *Scope) Use(svc ...Servicer) {
 	for _, v := range svc {
-		if health, ok := v.(*healthChecker); ok {
+		if health, ok := v.(*healthCheckService); ok {
 			rt := s.root()
 			rt.Use(health)
 			health.Load(rt)

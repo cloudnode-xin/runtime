@@ -46,7 +46,7 @@ func (s *Service) Use(svc ...Servicer) {
 			scope.parent = s
 		}
 
-		if health, ok := v.(*healthChecker); ok {
+		if health, ok := v.(*healthCheckService); ok {
 			health.root = s
 		}
 	}
