@@ -30,10 +30,24 @@ func (s *Service) MustGet(name string) Servicer {
 	return v
 }
 
+func (s *Service) IsHealthy() bool {
+	for _, c := range s.children {
+		if c.Name() != "#healthcheck" && !c.IsHealthy() {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s *Service) Use(svc ...Servicer) {
 	for _, v := range svc {
 		if scope, ok := v.(*Scope); ok {
 			scope.parent = s
+		}
+
+		if health, ok := v.(*healthChecker); ok {
+			health.root = s
 		}
 	}
 
@@ -71,10 +85,10 @@ func (s *Service) Start() error {
 			continue
 		}
 
+		log.Debugf("%s", getName(c))
 		if err := c.Start(s, ctx); err != nil {
 			return err
 		}
-		log.Debugf("%s", getName(c))
 	}
 
 	return nil
@@ -103,10 +117,10 @@ func (s *Service) Stop() error {
 			continue
 		}
 
+		log.Debugf("%s", getName(c))
 		if err := c.Stop(s); err != nil {
 			return err
 		}
-		log.Debugf("%s", getName(c))
 	}
 
 	return nil

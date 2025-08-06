@@ -3,9 +3,9 @@ package runtime
 import "context"
 
 type Servicer interface {
+	HealthChecker
 	// property
 	Name() string
-	IsHealthy() bool
 
 	// life cycle
 	Load(f Finder) error
