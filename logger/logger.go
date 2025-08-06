@@ -13,7 +13,7 @@ type setup struct {
 }
 
 func (s *setup) Name() string {
-	return "#loggerSetup"
+	return "#loggersetup"
 }
 
 func (s *setup) IsHealthy() bool {

@@ -61,7 +61,7 @@ func (s *Scope) Name() string {
 
 func (s *Scope) IsHealthy() bool {
 	for _, c := range s.children {
-		if c.Name() != "#healthcheck" && !c.IsHealthy() {
+		if !c.IsHealthy() {
 			return false
 		}
 	}
@@ -69,22 +69,27 @@ func (s *Scope) IsHealthy() bool {
 	return true
 }
 
-func (s *Scope) Use(svc ...Servicer) {
-	for _, v := range svc {
-		if health, ok := v.(*healthCheckService); ok {
-			rt := s.root()
-			rt.Use(health)
-			health.Load(rt)
-
-			continue
+func (s *Scope) Use(v Servicer) error {
+	for _, c := range s.children {
+		if c.Name() == v.Name() {
+			return ErrServiceMultiple
 		}
-
-		if scope, ok := v.(*Scope); ok {
-			scope.parent = s
-		}
-
-		s.children = append(s.children, v)
 	}
+
+	if health, ok := v.(*healthCheckService); ok {
+		root := s.root()
+		root.Use(health)
+		health.Load(root)
+
+		return nil
+	}
+
+	if scope, ok := v.(*Scope); ok {
+		scope.parent = s
+	}
+
+	s.children = append(s.children, v)
+	return nil
 }
 
 func (s *Scope) Load(f Finder) error {

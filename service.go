@@ -40,18 +40,23 @@ func (s *Service) IsHealthy() bool {
 	return true
 }
 
-func (s *Service) Use(svc ...Servicer) {
-	for _, v := range svc {
-		if scope, ok := v.(*Scope); ok {
-			scope.parent = s
-		}
-
-		if health, ok := v.(*healthCheckService); ok {
-			health.root = s
+func (s *Service) Use(v Servicer) error {
+	for _, c := range s.children {
+		if c.Name() == v.Name() {
+			return ErrServiceMultiple
 		}
 	}
 
-	s.children = append(s.children, svc...)
+	if scope, ok := v.(*Scope); ok {
+		scope.parent = s
+	}
+
+	if health, ok := v.(*healthCheckService); ok {
+		health.root = s
+	}
+
+	s.children = append(s.children, v)
+	return nil
 }
 
 func (s *Service) Start() error {

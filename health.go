@@ -26,7 +26,6 @@ func (r *router) ServeHTTP(rep http.ResponseWriter, req *http.Request) {
 }
 
 type healthCheckService struct {
-	check  bool
 	server *http.Server
 	root   *Service
 }
@@ -44,17 +43,26 @@ func (h *healthCheckService) IsHealthy() bool {
 }
 
 func (h *healthCheckService) Load(f Finder) error {
-	check := flag.Bool("healthcheck", false, "do health check")
-	flag.Parse()
-
-	h.check = *check
 	return nil
 }
 
 func (h *healthCheckService) Start(f Finder, ctx context.Context) error {
 	log := f.MustGet("#logger").(*Logger).New("healthcheck")
 
-	if !h.check {
+	fset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	docheck := fset.Bool("healthcheck", false, "do health check")
+	fset.Parse(os.Args[1:])
+
+	if *docheck {
+		rep, err := http.Get("http://localhost:9180/healthcheck")
+		if err != nil {
+			os.Exit(1)
+		} else if rep.StatusCode != 200 {
+			os.Exit(1)
+		} else {
+			os.Exit(0)
+		}
+	} else {
 		h.server = &http.Server{
 			Addr: ":9180",
 			Handler: &router{
@@ -68,15 +76,6 @@ func (h *healthCheckService) Start(f Finder, ctx context.Context) error {
 				log.Error(err)
 			}
 		}()
-	} else {
-		rep, err := http.Get("http://localhost:9180/healthcheck")
-		if err != nil {
-			os.Exit(1)
-		} else if rep.StatusCode != 200 {
-			os.Exit(1)
-		} else {
-			os.Exit(0)
-		}
 	}
 
 	hn, err := os.Hostname()
@@ -89,7 +88,7 @@ func (h *healthCheckService) Start(f Finder, ctx context.Context) error {
 }
 
 func (h *healthCheckService) Stop(f Finder) error {
-	if !h.check && h.server != nil {
+	if h.server != nil {
 		return h.server.Shutdown(context.Background())
 	}
 
