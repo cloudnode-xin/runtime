@@ -26,5 +26,5 @@ func getPath(s *Scope) string {
 }
 
 func isReserve(name string) bool {
-	return strings.HasPrefix(name, "(") || strings.HasPrefix(name, "[")
+	return strings.HasPrefix(name, "(")
 }
