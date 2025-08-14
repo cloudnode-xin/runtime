@@ -41,9 +41,12 @@ func (s *Service) IsHealthy() bool {
 }
 
 func (s *Service) Use(v Servicer) error {
-	for _, c := range s.children {
-		if c.Name() == v.Name() {
-			return ErrServiceMultiple
+	vn := v.Name()
+	if !isReserve(vn) {
+		for _, c := range s.children {
+			if c.Name() == vn {
+				return ErrServiceMultiple
+			}
 		}
 	}
 

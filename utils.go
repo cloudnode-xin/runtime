@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 func getName(s Servicer) string {
@@ -22,4 +23,8 @@ func getPath(s *Scope) string {
 	}
 
 	return fmt.Sprintf("%s.%s", getPath(scope), s.name)
+}
+
+func isReserve(name string) bool {
+	return strings.HasPrefix(name, "(") || strings.HasPrefix(name, "[")
 }

@@ -70,9 +70,12 @@ func (s *Scope) IsHealthy() bool {
 }
 
 func (s *Scope) Use(v Servicer) error {
-	for _, c := range s.children {
-		if c.Name() == v.Name() {
-			return ErrServiceMultiple
+	vn := v.Name()
+	if !isReserve(vn) {
+		for _, c := range s.children {
+			if c.Name() == vn {
+				return ErrServiceMultiple
+			}
 		}
 	}
 
