@@ -82,7 +82,7 @@ func (s *Scope) Use(v Servicer) error {
 	if health, ok := v.(*healthCheckService); ok {
 		root := s.root()
 		root.Use(health)
-		health.Load(root)
+		// health.Load(root)
 
 		return nil
 	}
