@@ -9,10 +9,10 @@ type Scope struct {
 	parent   Finder
 	name     string
 	children []Servicer
-	options  []ScopeOption
+	loader   ScopeLoader
 }
 
-type ScopeOption func(s *Scope)
+type ScopeLoader func(s *Scope)
 
 func (s *Scope) root() *Service {
 	parent := s.parent
@@ -96,8 +96,9 @@ func (s *Scope) Use(v Servicer) error {
 }
 
 func (s *Scope) Load(f Finder) error {
-	for _, opt := range s.options {
-		opt(s)
+	if s.loader != nil {
+		s.loader(s)
+		s.loader = nil
 	}
 
 	for _, c := range s.children {
@@ -164,10 +165,10 @@ func (s *Scope) Stop(f Finder) error {
 	return nil
 }
 
-func NewScope(name string, opts ...ScopeOption) *Scope {
+func NewScope(name string, loader ScopeLoader) *Scope {
 	s := &Scope{
-		name:    name,
-		options: opts,
+		name:   name,
+		loader: loader,
 	}
 
 	return s
